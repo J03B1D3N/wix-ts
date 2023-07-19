@@ -7,7 +7,7 @@ async function spreadsheetProcessor() {
     var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
     var returnUrl
     //initialise queue
-    let queue:Array<string[]> = []
+    let queue:Array<Array<string | number>> = []
     // console.log(sheetBundle)
 
     // time comlexity O(2n^3 ) || O(n^3)
@@ -21,24 +21,15 @@ async function spreadsheetProcessor() {
         
         //loop through numbers backwards(54321...)
         for(let data = sheetBundle[sheet].data.length - 1; data > -1; data--){
+            queue[data] = []
     
             //loop through the letters backwards (ZYXWV...)
             for(let element = sheetBundle[sheet].data[data].length - 1; element > -1; element--){
 
-                let variable = alphabet[element] + (data + 1)
-                // console.log(variable)
+                const variable = alphabet[element] + (data + 1)
 
                  //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                // eval("var " + variable + ' = ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
-                eval("var " + variable) 
-
-                variable = scrapeTheArguments(sheetBundle[sheet].data[data][element])
-
-
-                // var G1 = scrapeTheArguments(sheetBundle[sheet].data[data][element])
-                // console.log(G1)
-
-                // console.log(eval(variable)) 
+                eval(variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
             }
         }
   
@@ -46,22 +37,14 @@ async function spreadsheetProcessor() {
         //loop through numbers (123456...)
         for(let data = 0; data < sheetBundle[sheet].data.length; data++){
 
-            queue[data] = []
-
             //loop through letters (ABCDFG...)
             for(let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-
-                let variable = alphabet[element] + (data + 1)
+  
                 //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                eval("var " + variable) 
-                
-                variable = scrapeTheArguments(sheetBundle[sheet].data[data][element])
-
-                
-                // console.log(variable)
-                //push the value of solved/unsolved variable unto a queue
-                queue[data].push(variable)
-                // console.log(queue[data])
+                eval('var ' + alphabet[element] + (data + 1) + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+  
+                // //push the value of solved/unsolved variable unto a queue
+                queue[data].push(eval(alphabet[element] + (data + 1)))
             }
         }
 
@@ -79,11 +62,8 @@ async function spreadsheetProcessor() {
             for(let data = 0; data < sheetBundle[sheet].data.length; data++){
     
                 for(let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-
-                    let variable = alphabet[element] + (data + 1)
     
-                    eval("var " + variable + " = " + "null")
-                    
+                    eval('var ' + alphabet[element] + (data + 1) + '= ' + 'null' +";")
     
                 }
             }
@@ -122,17 +102,17 @@ async function spreadsheetProcessor() {
     }
 
     //scrapes the arguments, solves them if it can, skips solving functions
-    function scrapeTheArguments(argument:string) {
+    function scrapeTheArguments(argument:any) {
 
         try{
     
             let processedArgument = argument
     
-            
+            if(typeof argument == 'string') {
     
                 if(argument.includes('=')){
                     if(argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
-                        return processedArgument // changed from argument to processedArgument
+                        return argument
                     } else {
 
                         processedArgument = argument.replace('=', '')
@@ -141,7 +121,7 @@ async function spreadsheetProcessor() {
 
                     }
                 } 
-
+            }
             
         return processedArgument
 
@@ -154,7 +134,7 @@ async function spreadsheetProcessor() {
     
 
     //itterates the processing function over the queue elements
-    function handleProcessing(queue:Array<Array<string>>) {
+    function handleProcessing(queue:Array<Array<string | number>>) {
 
         for(let queueCount = 0; queueCount < queue.length; queueCount++) {
 
@@ -168,21 +148,25 @@ async function spreadsheetProcessor() {
     }   
 
     //processes all the arguments if it can
-    function processTheArguments(argument:string) {
+    function processTheArguments(argument:string | number) {
 
         try{
-    
+
             let processedArgument = argument
-    
+
+            if( typeof argument === "string") {
+
                 if(argument.includes('=')){
 
                     processedArgument = argument.replace('=', '')
     
                     processedArgument = eval(processedArgument)
 
-                    console.log(processedArgument)
-
                 } 
+
+            }
+    
+               
                 
         return processedArgument
 
@@ -197,7 +181,7 @@ async function spreadsheetProcessor() {
     
 
     //returns all the results to their corresponding places.
-    function returnArguments(sheetBundle:{data:Array<Array<string | number>>}, queue:Array<Array<string>>) {
+    function returnArguments(sheetBundle:{data:Array<Array<string | number>>}, queue:Array<Array<string | number>>) {
 
 
        

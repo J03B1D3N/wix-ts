@@ -28,11 +28,15 @@ function spreadsheetProcessor() {
             for (let data = sheetBundle[sheet].data.length - 1; data > -1; data--) {
                 //loop through the letters backwards (ZYXWV...)
                 for (let element = sheetBundle[sheet].data[data].length - 1; element > -1; element--) {
-                    const variable = alphabet[element] + (data + 1);
-                    console.log(variable);
+                    let variable = alphabet[element] + (data + 1);
+                    // console.log(variable)
                     //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                    eval("var " + variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";");
-                    console.log(eval(variable));
+                    // eval("var " + variable + ' = ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+                    eval("var " + variable);
+                    variable = scrapeTheArguments(sheetBundle[sheet].data[data][element]);
+                    // var G1 = scrapeTheArguments(sheetBundle[sheet].data[data][element])
+                    // console.log(G1)
+                    // console.log(eval(variable)) 
                 }
             }
             //loop through numbers (123456...)
@@ -40,12 +44,14 @@ function spreadsheetProcessor() {
                 queue[data] = [];
                 //loop through letters (ABCDFG...)
                 for (let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-                    const variable = alphabet[element] + (data + 1);
+                    let variable = alphabet[element] + (data + 1);
                     //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                    eval('var ' + variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";");
-                    console.log(variable);
+                    eval("var " + variable);
+                    variable = scrapeTheArguments(sheetBundle[sheet].data[data][element]);
+                    // console.log(variable)
                     //push the value of solved/unsolved variable unto a queue
-                    queue[data].push(eval(variable));
+                    queue[data].push(variable);
+                    // console.log(queue[data])
                 }
             }
             //process(solve) the variables
@@ -56,7 +62,8 @@ function spreadsheetProcessor() {
             for (let sheet = 0; sheet < sheetBundle.length; sheet++) {
                 for (let data = 0; data < sheetBundle[sheet].data.length; data++) {
                     for (let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-                        eval('var ' + alphabet[element] + (data + 1) + '= ' + 'null' + ";");
+                        let variable = alphabet[element] + (data + 1);
+                        eval("var " + variable + " = " + "null");
                     }
                 }
             }
@@ -108,11 +115,10 @@ function spreadsheetProcessor() {
         function processTheArguments(argument) {
             try {
                 let processedArgument = argument;
-                if (typeof argument == 'string') {
-                    if (argument.includes('=')) {
-                        processedArgument = argument.replace('=', '');
-                        processedArgument = eval(processedArgument);
-                    }
+                if (argument.includes('=')) {
+                    processedArgument = argument.replace('=', '');
+                    processedArgument = eval(processedArgument);
+                    console.log(processedArgument);
                 }
                 return processedArgument;
             }
@@ -139,6 +145,7 @@ function spreadsheetProcessor() {
 function returnProcessedInfoToTheApi() {
     return __awaiter(this, void 0, void 0, function* () {
         const { submission, returnUrl } = yield spreadsheetProcessor();
+        console.log(submission);
         if (returnUrl) {
             const response = yield fetch(returnUrl, {
                 method: "POST",

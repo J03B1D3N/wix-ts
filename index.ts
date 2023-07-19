@@ -25,12 +25,20 @@ async function spreadsheetProcessor() {
             //loop through the letters backwards (ZYXWV...)
             for(let element = sheetBundle[sheet].data[data].length - 1; element > -1; element--){
 
-                const variable = alphabet[element] + (data + 1)
-                console.log(variable)
+                let variable = alphabet[element] + (data + 1)
+                // console.log(variable)
 
                  //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                eval("var " + variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
-                console.log(eval(variable))
+                // eval("var " + variable + ' = ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+                eval("var " + variable) 
+
+                variable = scrapeTheArguments(sheetBundle[sheet].data[data][element])
+
+
+                // var G1 = scrapeTheArguments(sheetBundle[sheet].data[data][element])
+                // console.log(G1)
+
+                // console.log(eval(variable)) 
             }
         }
   
@@ -43,13 +51,17 @@ async function spreadsheetProcessor() {
             //loop through letters (ABCDFG...)
             for(let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
 
-                const variable = alphabet[element] + (data + 1)
+                let variable = alphabet[element] + (data + 1)
                 //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                eval('var ' + variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+                eval("var " + variable) 
                 
-                console.log(variable)
+                variable = scrapeTheArguments(sheetBundle[sheet].data[data][element])
+
+                
+                // console.log(variable)
                 //push the value of solved/unsolved variable unto a queue
-                queue[data].push(eval(variable))
+                queue[data].push(variable)
+                // console.log(queue[data])
             }
         }
 
@@ -67,8 +79,11 @@ async function spreadsheetProcessor() {
             for(let data = 0; data < sheetBundle[sheet].data.length; data++){
     
                 for(let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
+
+                    let variable = alphabet[element] + (data + 1)
     
-                    eval('var ' + alphabet[element] + (data + 1) + '= ' + 'null' +";")
+                    eval("var " + variable + " = " + "null")
+                    
     
                 }
             }
@@ -159,19 +174,16 @@ async function spreadsheetProcessor() {
     
             let processedArgument = argument
     
-       
-            if(typeof argument == 'string') {
-    
                 if(argument.includes('=')){
 
                     processedArgument = argument.replace('=', '')
     
                     processedArgument = eval(processedArgument)
 
+                    console.log(processedArgument)
+
                 } 
-    
-            }
-            
+                
         return processedArgument
 
         }
@@ -209,6 +221,7 @@ async function spreadsheetProcessor() {
     async function returnProcessedInfoToTheApi() {
 
         const {submission, returnUrl} = await spreadsheetProcessor()
+        console.log(submission)
 
         if(returnUrl) {
             const response = await fetch(returnUrl, {

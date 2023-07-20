@@ -7,136 +7,133 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-function spreadsheetProcessor() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const sheetBundle = yield fetchSheets();
-        console.log(sheetBundle);
-        //initialise alphabet
-        var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
-        var returnUrl;
-        //initialise queue
-        let queue = [];
-        // console.log(sheetBundle)
-        // time comlexity O(2n^3 ) || O(n^3)
-        // space complexity O(n) || O(3n)
-        //iterate through the sheets
+function spreadsheetProcessor(sheetBundle) {
+    //initialise alphabet
+    var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
+    //initialise queue
+    let queue = [];
+    // console.log(sheetBundle)
+    // time comlexity O(2n^3 ) || O(n^3)??
+    // space complexity O(n) || O(3n)??
+    //iterate through the sheets
+    for (let sheet = 0; sheet < sheetBundle.length; sheet++) {
+        //clean the queue with each iteration 
+        queue = [];
+        //loop through numbers backwards(54321...)
+        for (let data = sheetBundle[sheet].data.length - 1; data > -1; data--) {
+            queue[data] = [];
+            //loop through the letters backwards (ZYXWV...)
+            for (let element = sheetBundle[sheet].data[data].length - 1; element > -1; element--) {
+                const variable = alphabet[element] + (data + 1);
+                //create a variable with corresponding A1 notation and solve it immediatelly if possible.
+                eval(variable + '= ' + 'scrapeArguments(sheetBundle[sheet].data[data][element])' + ";");
+            }
+        }
+        //loop through numbers (123456...)
+        for (let data = 0; data < sheetBundle[sheet].data.length; data++) {
+            //loop through letters (ABCDFG...)
+            for (let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
+                //create a variable with corresponding A1 notation and solve it immediatelly if possible.
+                eval('var ' + alphabet[element] + (data + 1) + '= ' + 'scrapeArguments(sheetBundle[sheet].data[data][element])' + ";");
+                // //push the value of solved/unsolved variable unto a queue
+                queue[data].push(eval(alphabet[element] + (data + 1)));
+            }
+        }
+        //process(solve) the variables
+        queue = handleProcessing(queue);
+        //return solved arguments into their place
+        returnArguments(sheetBundle[sheet], queue);
+        //reset the variables to null in order to avoid errors
         for (let sheet = 0; sheet < sheetBundle.length; sheet++) {
-            //clean the queue with each iteration 
-            queue = [];
-            //loop through numbers backwards(54321...)
-            for (let data = sheetBundle[sheet].data.length - 1; data > -1; data--) {
-                queue[data] = [];
-                //loop through the letters backwards (ZYXWV...)
-                for (let element = sheetBundle[sheet].data[data].length - 1; element > -1; element--) {
-                    const variable = alphabet[element] + (data + 1);
-                    //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                    eval(variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";");
-                }
-            }
-            //loop through numbers (123456...)
             for (let data = 0; data < sheetBundle[sheet].data.length; data++) {
-                //loop through letters (ABCDFG...)
                 for (let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-                    //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                    eval('var ' + alphabet[element] + (data + 1) + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";");
-                    // //push the value of solved/unsolved variable unto a queue
-                    queue[data].push(eval(alphabet[element] + (data + 1)));
+                    eval('var ' + alphabet[element] + (data + 1) + '= ' + 'null' + ";");
                 }
             }
-            //process(solve) the variables
-            queue = handleProcessing(queue);
-            //return solved arguments into their place
-            returnArguments(sheetBundle[sheet], queue);
-            //reset the variables to null in order to avoid errors
-            for (let sheet = 0; sheet < sheetBundle.length; sheet++) {
-                for (let data = 0; data < sheetBundle[sheet].data.length; data++) {
-                    for (let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
-                        eval('var ' + alphabet[element] + (data + 1) + '= ' + 'null' + ";");
+        }
+    }
+    //getting the submition ready for return
+    let submission = {
+        "email": "justas.lapinas.98@gmail.com",
+        "results": sheetBundle
+    };
+    // end of app logic
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////
+    //below are the functions used in the app logic:
+    //scrapes the arguments, solves them if it can, skips solving functions
+    function scrapeArguments(argument) {
+        try {
+            let processedArgument = argument;
+            if (typeof argument == 'string') {
+                if (argument.includes('=')) {
+                    if (argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
+                        return argument;
                     }
-                }
-            }
-        }
-        // end of app logic
-        ///////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////
-        //below are the functions used in the app logic:
-        //the API call that gets us the sheets
-        function fetchSheets() {
-            return __awaiter(this, void 0, void 0, function* () {
-                const apiCall = yield fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets');
-                let processedData = yield apiCall.json();
-                returnUrl = processedData.submissionUrl;
-                let information = processedData.sheets;
-                return information;
-            });
-        }
-        //scrapes the arguments, solves them if it can, skips solving functions
-        function scrapeTheArguments(argument) {
-            try {
-                let processedArgument = argument;
-                if (typeof argument == 'string') {
-                    if (argument.includes('=')) {
-                        if (argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
-                            return argument;
-                        }
-                        else {
-                            processedArgument = argument.replace('=', '');
-                            processedArgument = eval(processedArgument);
-                        }
-                    }
-                }
-                return processedArgument;
-            }
-            catch (_a) {
-                return argument;
-            }
-        }
-        //itterates the processing function over the queue elements
-        function handleProcessing(queue) {
-            for (let queueCount = 0; queueCount < queue.length; queueCount++) {
-                queue[queueCount] = queue[queueCount].map(element => {
-                    return processTheArguments(element);
-                });
-            }
-            return queue;
-        }
-        //processes all the arguments if it can
-        function processTheArguments(argument) {
-            try {
-                let processedArgument = argument;
-                if (typeof argument === "string") {
-                    if (argument.includes('=')) {
+                    else {
                         processedArgument = argument.replace('=', '');
                         processedArgument = eval(processedArgument);
                     }
                 }
-                return processedArgument;
             }
-            catch (error) {
-                return `${error}`;
-            }
+            return processedArgument;
         }
-        //returns all the results to their corresponding places.
-        function returnArguments(sheetBundle, queue) {
-            for (let data = 0; data < queue.length; data++) {
-                for (let element = 0; element < queue[data].length; element++) {
-                    sheetBundle.data[data][element] = queue[data][element];
+        catch (_a) {
+            return argument;
+        }
+    }
+    //itterates the processing function over the queue elements
+    function handleProcessing(queue) {
+        for (let queueCount = 0; queueCount < queue.length; queueCount++) {
+            queue[queueCount] = queue[queueCount].map(element => {
+                return processTheArguments(element);
+            });
+        }
+        return queue;
+    }
+    //processes all the arguments if it can
+    function processTheArguments(argument) {
+        try {
+            let processedArgument = argument;
+            if (typeof argument === "string") {
+                if (argument.includes('=')) {
+                    processedArgument = argument.replace('=', '');
+                    processedArgument = eval(processedArgument);
                 }
             }
+            return processedArgument;
         }
-        let submission = {
-            "email": "justas.lapinas.98@gmail.com",
-            "results": sheetBundle
-        };
-        return { submission, returnUrl };
+        catch (error) {
+            return `${error}`;
+        }
+    }
+    return submission;
+    //end
+}
+//returns all the results to their corresponding places.
+function returnArguments(sheetBundle, queue) {
+    for (let data = 0; data < queue.length; data++) {
+        for (let element = 0; element < queue[data].length; element++) {
+            sheetBundle.data[data][element] = queue[data][element];
+        }
+    }
+}
+//the API call that gets us the sheets
+function fetchSheets() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const apiCall = yield fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets');
+        let processedData = yield apiCall.json();
+        let returnUrl = processedData.submissionUrl;
+        let sheetBundle = processedData.sheets;
+        const submission = spreadsheetProcessor(sheetBundle);
+        return { returnUrl, submission };
     });
 }
-//the POST request that sends the processed data to the API and logs the response
+//the POST request that calls the main function and returns the processed data to the API and logs the response
 function returnProcessedInfoToTheApi() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { submission, returnUrl } = yield spreadsheetProcessor();
-        console.log(submission);
+        const { submission, returnUrl } = yield fetchSheets();
         if (returnUrl) {
             const response = yield fetch(returnUrl, {
                 method: "POST",
@@ -150,6 +147,7 @@ function returnProcessedInfoToTheApi() {
         }
     });
 }
+//function that starts the app
 returnProcessedInfoToTheApi();
 //checks if argument is not number
 function isNotNumber(value) {
@@ -243,4 +241,4 @@ function CONCAT(...args) {
         return acc.concat(cur);
     }));
 }
-module.exports = { CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber };
+module.exports = { CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, returnArguments, spreadsheetProcessor };

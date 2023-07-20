@@ -1,18 +1,15 @@
 
-async function spreadsheetProcessor() {
+function spreadsheetProcessor(sheetBundle) {
 
-    const sheetBundle = await fetchSheets()
-    console.log(sheetBundle)
     
     //initialise alphabet
     var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
-    var returnUrl
     //initialise queue
     let queue:Array<Array<string | number>> = []
     // console.log(sheetBundle)
 
-    // time comlexity O(2n^3 ) || O(n^3)
-    // space complexity O(n) || O(3n)
+    // time comlexity O(2n^3 ) || O(n^3)??
+    // space complexity O(n) || O(3n)??
 
     //iterate through the sheets
     for(let sheet = 0;sheet < sheetBundle.length; sheet++) {
@@ -30,7 +27,7 @@ async function spreadsheetProcessor() {
                 const variable = alphabet[element] + (data + 1)
 
                  //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                eval(variable + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+                eval(variable + '= ' + 'scrapeArguments(sheetBundle[sheet].data[data][element])' + ";")
             }
         }
   
@@ -42,7 +39,7 @@ async function spreadsheetProcessor() {
             for(let element = 0; element < sheetBundle[sheet].data[data].length; element++) {
   
                 //create a variable with corresponding A1 notation and solve it immediatelly if possible.
-                eval('var ' + alphabet[element] + (data + 1) + '= ' + 'scrapeTheArguments(sheetBundle[sheet].data[data][element])' + ";")
+                eval('var ' + alphabet[element] + (data + 1) + '= ' + 'scrapeArguments(sheetBundle[sheet].data[data][element])' + ";")
   
                 // //push the value of solved/unsolved variable unto a queue
                 queue[data].push(eval(alphabet[element] + (data + 1)))
@@ -71,6 +68,11 @@ async function spreadsheetProcessor() {
         }
     }
 
+     //getting the submition ready for return
+     let submission  = {
+        "email": "justas.lapinas.98@gmail.com",
+        "results": sheetBundle
+    }
 
    
 
@@ -86,38 +88,22 @@ async function spreadsheetProcessor() {
 
     //below are the functions used in the app logic:
 
-
-
-    //the API call that gets us the sheets
-    async function fetchSheets() {
-        
-        const apiCall = await fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets')
-        
-        let processedData = await apiCall.json()
-
-        
-        returnUrl = processedData.submissionUrl
-        let information  = processedData.sheets
-
-        return information
-    }
-
     //scrapes the arguments, solves them if it can, skips solving functions
-    function scrapeTheArguments(argument:any) {
+    function scrapeArguments(argument:any) {
 
         try{
-    
+
             let processedArgument = argument
-    
+
             if(typeof argument == 'string') {
-    
+
                 if(argument.includes('=')){
                     if(argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
                         return argument
                     } else {
 
                         processedArgument = argument.replace('=', '')
-    
+
                         processedArgument = eval(processedArgument)
 
                     }
@@ -132,7 +118,7 @@ async function spreadsheetProcessor() {
             return argument 
         }
     }
-    
+
 
     //itterates the processing function over the queue elements
     function handleProcessing(queue:Array<Array<string | number>>) {
@@ -160,14 +146,13 @@ async function spreadsheetProcessor() {
                 if(argument.includes('=')){
 
                     processedArgument = argument.replace('=', '')
-    
+
                     processedArgument = eval(processedArgument)
 
                 } 
 
             }
-    
-               
+            
                 
         return processedArgument
 
@@ -179,53 +164,65 @@ async function spreadsheetProcessor() {
 
         }
     }
-    
-
-    //returns all the results to their corresponding places.
-    function returnArguments(sheetBundle:{data:Array<Array<string | number>>}, queue:Array<Array<string | number>>) {
 
 
-       
-        for( let data = 0; data < queue.length; data++ ) {
+   
 
-            for( let element = 0; element < queue[data].length; element++) {
-                sheetBundle.data[data][element] = queue[data][element]
-            }
-        }
-    }
-
-    let submission  = {
-        "email": "justas.lapinas.98@gmail.com",
-        "results": sheetBundle
-    }
-    return {submission, returnUrl}
+    return submission
+    //end
 }
 
+//returns all the results to their corresponding places.
+function returnArguments(sheetBundle:{data:Array<Array<string | number>>}, queue:Array<Array<string | number>>) {
 
-    //the POST request that sends the processed data to the API and logs the response
-    async function returnProcessedInfoToTheApi() {
+    for( let data = 0; data < queue.length; data++ ) {
 
-        const {submission, returnUrl} = await spreadsheetProcessor()
-        console.log(submission)
-
-        if(returnUrl) {
-            const response = await fetch(returnUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(submission),
-                });
-    
-            const result = await response.json()
-            console.log(result)
+        for( let element = 0; element < queue[data].length; element++) {
+            sheetBundle.data[data][element] = queue[data][element]
         }
-       
     }
+}
 
-returnProcessedInfoToTheApi();
+//the API call that gets us the sheets
+async function fetchSheets() {
 
-    //checks if argument is not number
+    
+    const apiCall = await fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets')
+    
+    let processedData = await apiCall.json()
+    
+    
+    let returnUrl = processedData.submissionUrl
+    let sheetBundle  = processedData.sheets
+    const submission = spreadsheetProcessor(sheetBundle)
+
+return { returnUrl, submission}
+}    
+
+//the POST request that calls the main function and returns the processed data to the API and logs the response
+async function returnProcessedInfoToTheApi() {
+
+    const {submission, returnUrl} = await fetchSheets()
+
+    if(returnUrl) {
+        const response = await fetch(returnUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(submission),
+            });
+
+        const result = await response.json()
+        console.log(result)
+    }
+   
+}
+
+//function that starts the app
+returnProcessedInfoToTheApi();    
+
+//checks if argument is not number
 function isNotNumber(value) {
     return 'number' !== typeof value || isNaN(value)
 }
@@ -318,7 +315,7 @@ function CONCAT(...args) {
     }))
 }
 
-module.exports = {CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber}
+module.exports = {CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, returnArguments, spreadsheetProcessor}
 
 
 

@@ -223,7 +223,7 @@ async function spreadsheetProcessor() {
        
     }
 
-    returnProcessedInfoToTheApi();
+returnProcessedInfoToTheApi();
 
     //checks if argument is not number
 function isNotNumber(value) {
@@ -318,7 +318,7 @@ function CONCAT(...args) {
     }))
 }
 
-    
+module.exports = {CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber}
 
 
 

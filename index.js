@@ -243,3 +243,4 @@ function CONCAT(...args) {
         return acc.concat(cur);
     }));
 }
+module.exports = { CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber };

@@ -1,3 +1,4 @@
+
 async function spreadsheetProcessor() {
 
     const sheetBundle = await fetchSheets()
@@ -224,146 +225,100 @@ async function spreadsheetProcessor() {
 
     returnProcessedInfoToTheApi();
 
-    // //checks if argument is not number
-    // function isNotNumber(value) {
-    //     return 'number' !== typeof value || isNaN(value)
-    // }
-    
-    // //checks if arguments is not string
-    // function isNotString(value){
-    //     return'string' !== typeof value
-    // }
-    
-    // //checks if argument is not boolean
-    // function isNotBoolean(value){
-    //     return 'boolean' !== typeof value;
-    // } 
-    
-    //checks if all arguments are numbers, then multiplies them
-    function MULTIPLY(...args:number[]) {
-        try {
-            return args.reduce(function (acc, cur) {
-                return acc * cur
-            })
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    
-    //checks if all arguments are numbers, then adds them together
-    function SUM(...args:number[]) {
-        try {
-            return args.reduce(function (acc, cur) {
-                return acc + cur
-            })
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-        
-    }
-    
-    //checks if all arguments are numbers, then divides them
-    function DIVIDE(...args:number[]) {
-        try {
-            return args.reduce(function (acc, cur) {
-                return acc / cur
-            })
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    //checks if all arguments are numbers, then checks if first argument is greater than the other them
-    function GT(a:number,b:number) {
-        try {
-            return (a > b ? true : false)
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    //checks if all arguments are of the same type, then equates their value them
-    function EQ(a:number,b:number) {
-        try {
-            return (a === b ? true : false)
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    //checks if argument is a boolean, then reverses it
-    function NOT(a:boolean) {
-        try {
-            return !a
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    //checks if all arguments are booleans, then runs the AND operator on them
-    function AND(...args:boolean[]) {
-        try {
-           return  args.reduce(function (acc, cur) {
-                return acc && cur
-            })
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
-    
-    //checks if all arguments are booleans, then runs the OR operator on them
-    function OR(...args:boolean[]) {
-        try {
-            return  args.reduce(function (acc, cur) {
-                 return acc || cur
-             })
-         }
-         catch {
-             return '#ERROR: type does not match'
-         }
-    }
-    
-    //IF statement. Returns error if condition is not a truthy or a falsy
-    function IF(condition:boolean, arg1:any, arg2:any) {
-    
-        try {
-            return (condition ? arg1 : arg2)
-         }
-         catch {
-             return '#ERROR: type does not match'
-         }
-        
-    }
-    
-    //checks if all arguments are strings, then concacts them
-    function CONCAT(...args:string[]) {
-        try {
-            return args.reduce(function (acc, cur) {
-                return acc.concat(cur)
-            })
-         }
-         catch {
-             return '#ERROR: type does not match'
-         }
-        
-    }
+    //checks if argument is not number
+function isNotNumber(value) {
+    return 'number' !== typeof value || isNaN(value)
+}
 
-    function LT(a:number,b:number) {
-        try {
-            return (a < b ? true : false)
-        }
-        catch {
-            return '#ERROR: type does not match'
-        }
-    }
+//checks if arguments is not string
+function isNotString(value){
+    return'string' !== typeof value
+}
+
+//checks if argument is not boolean
+function isNotBoolean(value){
+    return 'boolean' !== typeof value;
+} 
+
+//checks if all arguments are numbers, then multiplies them
+function MULTIPLY(...args) {
+    if(!args.some(isNotNumber)){
+        return args.reduce(function (acc, cur) {
+            return acc * cur
+        })
+    } else return '#ERROR: type does not match'
+}
+
+//checks if all arguments are numbers, then adds them together
+function SUM(...args) {
+    if(!args.some(isNotNumber)){
+        return args.reduce(function (acc, cur) {
+            return acc + cur
+        })
+    } else return '#ERROR: type does not match'
+}
+
+//checks if all arguments are numbers, then divides them
+function DIVIDE(...args) {
+    if(!args.some(isNotNumber)){
+        return args.reduce(function (acc, cur) {
+            return acc / cur
+        })
+    } else return '#ERROR: type does not match'
+}
+
+//checks if all arguments are numbers, then checks if first argument is greater than the other them
+function GT(a,b) {
+    if(isNotNumber(a) || isNotNumber(b)){
+        return '#ERROR: type does not match'
+    } else return (a > b ? true : false)
+}
+
+//checks if all arguments are of the same type, then equates their value them
+function EQ(a,b) {
+    if(isNotNumber(a) || isNotNumber(b)){
+        return '#ERROR: type does not match'
+    } else return (a == b ? true : false)
+}
+
+//checks if argument is a boolean, then reverses it
+function NOT(a) {
+    if(typeof a == "boolean"){
+        return !a
+    } else return '#ERROR: type does not match'
+}
+
+//checks if all arguments are booleans, then runs the AND operator on them
+function AND(...args) {
+    return (args.some(isNotBoolean) ? '#ERROR: type does not match' : args.reduce(function (acc, cur) {
+        return acc && cur
+    }))
+}
+
+//checks if all arguments are booleans, then runs the OR operator on them
+function OR(...args) {
+    return (args.some(isNotBoolean) ? '#ERROR: type does not match' : args.reduce(function (acc, cur) {
+        return acc || cur
+    }))
+}
+
+//IF statement. Returns error if condition is not a truthy or a falsy
+function IF(condition, arg1, arg2) {
+
+    if(isNotBoolean(condition)){
+        return '#ERROR: type does not match'
+    } else return (condition ? arg1 : arg2)
+    
+}
+
+//checks if all arguments are strings, then concacts them
+function CONCAT(...args) {
+    return (args.some(isNotString) ? '#ERROR: type does not match' : args.reduce(function (acc, cur) {
+        return acc.concat(cur)
+    }))
+}
+
+    
 
 
-    // module.exports = {spreadsheetProcessor, LT, CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber}
+

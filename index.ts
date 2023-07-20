@@ -1,11 +1,32 @@
+type sheetBundle = {id: string, data:Array<Array<string | number>>}[]
+type queue = Array<Array<string | number>>
+type argument = string | number
+type sheet = {data:Array<Array<string | number>>}
 
-function spreadsheetProcessor(sheetBundle) {
 
+//the API call that gets us the sheets
+async function fetchSheets() {
+
+    
+    const apiCall = await fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets')
+    
+    let processedData = await apiCall.json()
+    
+    
+    let returnUrl = processedData.submissionUrl
+    let sheetBundle  = processedData.sheets
+
+return {returnUrl, sheetBundle}
+}    
+
+
+//the main logic that processed the data and returns solved data
+function spreadsheetProcessor(sheetBundle:sheetBundle) {
     
     //initialise alphabet
     var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
     //initialise queue
-    let queue:Array<Array<string | number>> = []
+    let queue:queue = []
     // console.log(sheetBundle)
 
     // time comlexity O(2n^3 ) || O(n^3)??
@@ -74,28 +95,14 @@ function spreadsheetProcessor(sheetBundle) {
         "results": sheetBundle
     }
 
-   
-
-    // end of app logic
-
-
-
-    ///////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////
-
-
-
-    //below are the functions used in the app logic:
-
     //scrapes the arguments, solves them if it can, skips solving functions
-    function scrapeArguments(argument:any) {
+    function scrapeArguments(argument:argument) {
 
         try{
 
             let processedArgument = argument
 
-            if(typeof argument == 'string') {
+            if(typeof argument === 'string') {
 
                 if(argument.includes('=')){
                     if(argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
@@ -121,7 +128,7 @@ function spreadsheetProcessor(sheetBundle) {
 
 
     //itterates the processing function over the queue elements
-    function handleProcessing(queue:Array<Array<string | number>>) {
+    function handleProcessing(queue:queue) {
 
         for(let queueCount = 0; queueCount < queue.length; queueCount++) {
 
@@ -135,7 +142,7 @@ function spreadsheetProcessor(sheetBundle) {
     }   
 
     //processes all the arguments if it can
-    function processTheArguments(argument:string | number) {
+    function processTheArguments(argument:argument) {
 
         try{
 
@@ -165,44 +172,26 @@ function spreadsheetProcessor(sheetBundle) {
         }
     }
 
+    //returns all the results to their corresponding places.
+    function returnArguments(sheet:sheet, queue:queue) {
 
-   
+        for( let data = 0; data < queue.length; data++ ) {
 
-    return submission
-    //end
-}
-
-//returns all the results to their corresponding places.
-function returnArguments(sheetBundle:{data:Array<Array<string | number>>}, queue:Array<Array<string | number>>) {
-
-    for( let data = 0; data < queue.length; data++ ) {
-
-        for( let element = 0; element < queue[data].length; element++) {
-            sheetBundle.data[data][element] = queue[data][element]
+            for( let element = 0; element < queue[data].length; element++) {
+                sheet.data[data][element] = queue[data][element]
+            }
         }
     }
+
+
+   
+    return submission
 }
 
-//the API call that gets us the sheets
-async function fetchSheets() {
-
-    
-    const apiCall = await fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets')
-    
-    let processedData = await apiCall.json()
-    
-    
-    let returnUrl = processedData.submissionUrl
-    let sheetBundle  = processedData.sheets
-    const submission = spreadsheetProcessor(sheetBundle)
-
-return { returnUrl, submission}
-}    
 
 //the POST request that calls the main function and returns the processed data to the API and logs the response
-async function returnProcessedInfoToTheApi() {
+async function returnProcessedInfoToTheApi(submission:{email: string, results:sheetBundle}, returnUrl:string) {
 
-    const {submission, returnUrl} = await fetchSheets()
 
     if(returnUrl) {
         const response = await fetch(returnUrl, {
@@ -219,8 +208,26 @@ async function returnProcessedInfoToTheApi() {
    
 }
 
-//function that starts the app
-returnProcessedInfoToTheApi();    
+async function initApp() {
+
+    const {returnUrl, sheetBundle} = await fetchSheets()
+
+    const submission = spreadsheetProcessor(sheetBundle)
+
+    returnProcessedInfoToTheApi(submission, returnUrl)
+
+}
+
+
+
+
+initApp();
+
+
+
+
+
+//utility functions
 
 //checks if argument is not number
 function isNotNumber(value) {
@@ -315,7 +322,7 @@ function CONCAT(...args) {
     }))
 }
 
-module.exports = {CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, returnArguments, spreadsheetProcessor}
+module.exports = {CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, spreadsheetProcessor}
 
 
 

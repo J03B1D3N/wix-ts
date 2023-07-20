@@ -7,6 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+//the API call that gets us the sheets
+function fetchSheets() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const apiCall = yield fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets');
+        let processedData = yield apiCall.json();
+        let returnUrl = processedData.submissionUrl;
+        let sheetBundle = processedData.sheets;
+        return { returnUrl, sheetBundle };
+    });
+}
+//the main logic that processed the data and returns solved data
 function spreadsheetProcessor(sheetBundle) {
     //initialise alphabet
     var alphabet = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
@@ -57,16 +68,11 @@ function spreadsheetProcessor(sheetBundle) {
         "email": "justas.lapinas.98@gmail.com",
         "results": sheetBundle
     };
-    // end of app logic
-    ///////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////
-    //below are the functions used in the app logic:
     //scrapes the arguments, solves them if it can, skips solving functions
     function scrapeArguments(argument) {
         try {
             let processedArgument = argument;
-            if (typeof argument == 'string') {
+            if (typeof argument === 'string') {
                 if (argument.includes('=')) {
                     if (argument.includes("MULTIPLY") || argument.includes("SUM") || argument.includes("DIVIDE") || argument.includes("GT") || argument.includes("EQ") || argument.includes("NOT") || argument.includes("AND") || argument.includes("OR") || argument.includes("IF") || argument.includes("CONCAT")) {
                         return argument;
@@ -108,32 +114,19 @@ function spreadsheetProcessor(sheetBundle) {
             return `${error}`;
         }
     }
-    return submission;
-    //end
-}
-//returns all the results to their corresponding places.
-function returnArguments(sheetBundle, queue) {
-    for (let data = 0; data < queue.length; data++) {
-        for (let element = 0; element < queue[data].length; element++) {
-            sheetBundle.data[data][element] = queue[data][element];
+    //returns all the results to their corresponding places.
+    function returnArguments(sheet, queue) {
+        for (let data = 0; data < queue.length; data++) {
+            for (let element = 0; element < queue[data].length; element++) {
+                sheet.data[data][element] = queue[data][element];
+            }
         }
     }
-}
-//the API call that gets us the sheets
-function fetchSheets() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const apiCall = yield fetch('https://www.wix.com/_serverless/hiring-task-spreadsheet-evaluator/sheets');
-        let processedData = yield apiCall.json();
-        let returnUrl = processedData.submissionUrl;
-        let sheetBundle = processedData.sheets;
-        const submission = spreadsheetProcessor(sheetBundle);
-        return { returnUrl, submission };
-    });
+    return submission;
 }
 //the POST request that calls the main function and returns the processed data to the API and logs the response
-function returnProcessedInfoToTheApi() {
+function returnProcessedInfoToTheApi(submission, returnUrl) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { submission, returnUrl } = yield fetchSheets();
         if (returnUrl) {
             const response = yield fetch(returnUrl, {
                 method: "POST",
@@ -147,8 +140,15 @@ function returnProcessedInfoToTheApi() {
         }
     });
 }
-//function that starts the app
-returnProcessedInfoToTheApi();
+function initApp() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { returnUrl, sheetBundle } = yield fetchSheets();
+        const submission = spreadsheetProcessor(sheetBundle);
+        returnProcessedInfoToTheApi(submission, returnUrl);
+    });
+}
+initApp();
+//utility functions
 //checks if argument is not number
 function isNotNumber(value) {
     return 'number' !== typeof value || isNaN(value);
@@ -241,4 +241,4 @@ function CONCAT(...args) {
         return acc.concat(cur);
     }));
 }
-module.exports = { CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, returnArguments, spreadsheetProcessor };
+module.exports = { CONCAT, IF, OR, AND, NOT, EQ, GT, DIVIDE, SUM, MULTIPLY, isNotBoolean, isNotString, isNotNumber, returnProcessedInfoToTheApi, fetchSheets, spreadsheetProcessor };
